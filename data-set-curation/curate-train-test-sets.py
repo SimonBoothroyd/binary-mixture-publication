@@ -4,7 +4,7 @@ from typing import List
 import pandas
 from nonbonded.library.models.authors import Author
 from nonbonded.library.models.datasets import DataSet
-from nonbonded.library.utilities.environments import ChemicalEnvironment
+from openff.evaluator.utils.checkmol import ChemicalEnvironment
 from openff.evaluator.datasets.curation.components import (
     conversion,
     filtering,
@@ -229,7 +229,7 @@ def curate_pure_training_sets(initial_data: pandas.DataFrame) -> List[DataSet]:
             "This data set was originally curated for the `expanded` study as part of "
             "the `binary-mixture` project",
             authors=AUTHORS,
-        ),
+        )
     ]
 
     return training_sets
@@ -520,8 +520,10 @@ def curate_mixture_test_set(
                     "[#6](=[#8])-[#6](-[#1])(-[#1])-[#6](=[#8])-[#6]",
                 ],
             ),
-            # Filter out heavy water
-            filtering.FilterBySmilesSchema(smiles_to_exclude=["[2H]O[2H]"]),
+            # Filter out heavy water and carboxylic acids we wish to exclude from benchmarking
+            # filtering.FilterBySmilesSchema(smiles_to_exclude=["[2H]O[2H]"]),
+            filtering.FilterBySmilesSchema(smiles_to_exclude=["[2H]O[2H]", "CC(=O)O", "CCC(=O)O", "C(=O)O", "O=CO"]),
+
             # Filter out any racemic mixtures
             filtering.FilterByRacemicSchema(),
             # Attempt to select a diverse number of systems to include
@@ -529,7 +531,6 @@ def curate_mixture_test_set(
                 target_environments=[
                     ChemicalEnvironment.Alcohol,
                     ChemicalEnvironment.CarboxylicAcidEster,
-                    ChemicalEnvironment.CarboxylicAcid,
                     ChemicalEnvironment.Ether,
                     ChemicalEnvironment.Ketone,
                     ChemicalEnvironment.Alkane,
